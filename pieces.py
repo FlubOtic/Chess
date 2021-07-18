@@ -69,16 +69,37 @@ class Pawn(Piece):
         self.value = 1
         if color == "White":
             board.player1Score += self.value
+            self.index = len(board.player1Pieces)
             board.player1Pieces.append(self)
         else:
             board.player2Score += self.value
+            self.index = len(board.player2Pieces)
             board.player2Pieces.append(self)
+
         super().__init__(screen, color, location, locationGUI, image, board, SQUARE)
 
     def Die(self):
             self.board.UpdateScore(self.value, self.color)
             self.alive = False
             self.board.squares[self.location[0]][self.location[1]][1] = None
+            if self.color == "White":
+                del self.board.player1Pieces[self.index]
+            else:
+                del self.board.player2Pieces[self.index]
+
+    def See(self):
+        seen = [[False for y in range(8)] for x in range(8)] 
+        if self.color == "White":
+            if -1 < self.location[0] + 1 < 8 and -1 < self.location[1] + 1 < 8:
+                seen[self.location[0] + 1][self.location[1] + 1] = True
+            if -1 < self.location[0] - 1 < 8 and -1 < self.location[1] + 1 < 8:
+                seen[self.location[0] - 1][self.location[1] + 1] = True
+        else:
+            if -1 < self.location[0] + 1 < 8 and -1 < self.location[1] - 1 < 8:
+                seen[self.location[0] + 1][self.location[1] - 1] = True
+            if -1 < self.location[0] - 1 < 8 and -1 < self.location[1] - 1 < 8:
+                seen[self.location[0] - 1][self.location[1] - 1] = True
+        return seen
 
     def isAvailable(self, avLocation):
         if self.board.squares[avLocation[0]][avLocation[1]][1] == None:
@@ -98,13 +119,12 @@ class Pawn(Piece):
                     if avLocation == [self.location[0], self.location[1] + 1]:
                         return True
                 if self.board.squares[avLocation[0]][avLocation[1] - 1][1] != None:  
-                    if self.board.squares[avLocation[0]][avLocation[1] - 1][1] == self.board.squares[self.location[0] - 1][self.location[1]][1] or self.board.squares[avLocation[0]][avLocation[1] - 1][1] == self.board.squares[self.location[0] + 1][self.location[1]][1]:
+                    if [avLocation[0], avLocation[1] - 1] == [self.location[0] - 1, self.location[1]] or [avLocation[0], avLocation[1] - 1] == [self.location[0] + 1, self.location[1]]:
                         if self.board.squares[avLocation[0]][avLocation[1] - 1][1].name == self.name and self.board.squares[avLocation[0]][avLocation[1] - 1][1].color == self.OppositeColor():
                             if self.board.squares[avLocation[0]][avLocation[1] - 1][1].enpassant[0] and self.board.player2Moves == self.board.squares[avLocation[0]][avLocation[1] - 1][1].enpassant[1]:
                                 self.board.squares[avLocation[0]][avLocation[1] - 1][1].Die()
                                 return True
                 self.promotion = False
-                print("FAlse")
             elif self.color == "Black":
                 for x in range(8):
                     if [x, 0] == avLocation:
@@ -120,7 +140,7 @@ class Pawn(Piece):
                     if avLocation == [self.location[0], self.location[1] - 1]:
                         return True
                 if self.board.squares[avLocation[0]][avLocation[1] + 1][1] != None:        
-                    if self.board.squares[avLocation[0]][avLocation[1] + 1][1] == self.board.squares[self.location[0] - 1][self.location[1]][1] or self.board.squares[avLocation[0]][avLocation[1] + 1][1] == self.board.squares[self.location[0] + 1][self.location[1]][1]:
+                    if [avLocation[0], avLocation[1] + 1] == [self.location[0] - 1, self.location[1]] or [avLocation[0], avLocation[1] + 1] == [self.location[0] + 1, self.location[1]]:
                         if self.board.squares[avLocation[0]][avLocation[1] + 1][1].name == self.name and self.board.squares[avLocation[0]][avLocation[1] + 1][1].color == self.OppositeColor():
                             if self.board.squares[avLocation[0]][avLocation[1] + 1][1].enpassant[0] and self.board.player1Moves == self.board.squares[avLocation[0]][avLocation[1] + 1][1].enpassant[1]:
                                 self.board.squares[avLocation[0]][avLocation[1] + 1][1].Die()
@@ -149,9 +169,11 @@ class Rook(Piece):
         self.value = 5
         if color == "White":
             board.player1Score += self.value
+            self.index = len(board.player1Pieces)
             board.player1Pieces.append(self)
         else:
             board.player2Score += self.value
+            self.index = len(board.player2Pieces)
             board.player2Pieces.append(self)
 
         super().__init__(screen, color, location, locationGUI, image, board, SQUARE)
@@ -160,6 +182,50 @@ class Rook(Piece):
             self.board.UpdateScore(self.value, self.color)
             self.alive = False
             self.board.squares[self.location[0]][self.location[1]][1] = None
+            if self.color == "White":
+                del self.board.player1Pieces[self.index]
+            else:
+                del self.board.player2Pieces[self.index]
+
+    def See(self):
+        seen = [[False for y in range(8)] for x in range(8)] 
+        for i in range(8):
+            if self.location[1] + i < len(self.board.squares[0]) and i > 0:
+                if self.board.squares[self.location[0]][self.location[1] + i][1] != None:
+                    if self.board.squares[self.location[0]][self.location[1] + i][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0]][self.location[1] + i] = True
+                        break
+                seen[self.location[0]][self.location[1] + i] = True
+        for i in range(8):
+            if self.location[1] - i >= 0 and i > 0:
+                if self.board.squares[self.location[0]][self.location[1] - i][1] != None:
+                    if self.board.squares[self.location[0]][self.location[1] - i][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0]][self.location[1] - i] = True
+                        break
+                seen[self.location[0]][self.location[1] - i] = True
+        for i in range(8):
+            if self.location[0] + i < len(self.board.squares) and i > 0:
+                if self.board.squares[self.location[0] + i][self.location[1]][1] != None:
+                    if self.board.squares[self.location[0] + i][self.location[1]][1].color == self.color: 
+                        break
+                    else:
+                        seen[self.location[0] + i][self.location[1]] = True
+                        break
+                seen[self.location[0] + i][self.location[1]] = True
+        for i in range(8):
+            if self.location[0] - i >= 0 and i > 0:
+                if self.board.squares[self.location[0] - i][self.location[1]][1] != None:
+                    if self.board.squares[self.location[0] - i][self.location[1]][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0] - 1][self.location[1]] = True
+                        break
+                seen[self.location[0] - i][self.location[1]] = True
+        return seen
 
     def isAvailable(self, avLocation):
         for i in range(8):
@@ -198,9 +264,11 @@ class Knight(Piece):
         self.value = 3
         if color == "White":
             board.player1Score += self.value
+            self.index = len(board.player1Pieces)
             board.player1Pieces.append(self)
         else:
             board.player2Score += self.value
+            self.index = len(board.player2Pieces)
             board.player2Pieces.append(self)
 
         super().__init__(screen, color, location, locationGUI, image, board, SQUARE)
@@ -209,6 +277,30 @@ class Knight(Piece):
             self.board.UpdateScore(self.value, self.color)
             self.alive = False
             self.board.squares[self.location[0]][self.location[1]][1] = None
+            if self.color == "White":
+                del self.board.player1Pieces[self.index]
+            else:
+                del self.board.player2Pieces[self.index]
+
+    def See(self):
+        seen = [[False for y in range(8)] for x in range(8)] 
+        if (-1 < self.location[0] + 1 < 8) and (-1 < self.location[1] + 2 < 8) and (self.board.squares[self.location[0] + 1][self.location[1] + 2][1] == None or self.board.squares[self.location[0] + 1][self.location[1] + 2][1].color == self.OppositeColor()):
+            seen[self.location[0] + 1][self.location[1] + 2] = True
+        if (-1 < self.location[0] + 2 < 8) and (-1 < self.location[1] + 1 < 8) and (self.board.squares[self.location[0] + 2][self.location[1] + 1][1] == None or self.board.squares[self.location[0] + 2][self.location[1] + 1][1].color == self.OppositeColor()):
+            seen[self.location[0] + 2][self.location[1] + 1] = True
+        if (-1 < self.location[0] + 2 < 8) and (-1 < self.location[1] - 1 < 8) and (self.board.squares[self.location[0] + 2][self.location[1] - 1][1] == None or self.board.squares[self.location[0] + 2][self.location[1] - 1][1].color == self.OppositeColor()):
+            seen[self.location[0] + 2][self.location[1] - 1] = True
+        if (-1 < self.location[0] + 1 < 8) and (-1 < self.location[1] - 2 < 8) and (self.board.squares[self.location[0] + 1][self.location[1] - 2][1] == None or self.board.squares[self.location[0] + 1][self.location[1] - 2][1].color == self.OppositeColor()):
+            seen[self.location[0] + 1][self.location[1] - 2] = True
+        if (-1 < self.location[0] - 1 < 8) and (-1 < self.location[1] - 2 < 8) and (self.board.squares[self.location[0] - 1][self.location[1] - 2][1] == None or self.board.squares[self.location[0] - 1][self.location[1] - 2][1].color == self.OppositeColor()):
+            seen[self.location[0] - 1][self.location[1] - 2] = True
+        if (-1 < self.location[0] - 2 < 8) and (-1 < self.location[1] - 1 < 8) and (self.board.squares[self.location[0] - 2][self.location[1] - 1][1] == None or self.board.squares[self.location[0] - 2][self.location[1] - 1][1].color == self.OppositeColor()):
+            seen[self.location[0] - 2][self.location[1] - 1] = True
+        if (-1 < self.location[0] - 2 < 8) and (-1 < self.location[1] + 1 < 8) and (self.board.squares[self.location[0] - 2][self.location[1] + 1][1] == None or self.board.squares[self.location[0] - 2][self.location[1] + 1][1].color == self.OppositeColor()):
+            seen[self.location[0] - 2][self.location[1] + 1] = True
+        if (-1 < self.location[0] - 1 < 8) and (-1 < self.location[1] + 2 < 8) and (self.board.squares[self.location[0] - 1][self.location[1] + 2][1] == None or self.board.squares[self.location[0] - 1][self.location[1] + 2][1].color == self.OppositeColor()):
+            seen[self.location[0] - 1][self.location[1] + 2] = True
+        return seen
             
     def isAvailable(self, avLocation):
         if self.board.squares[avLocation[0]][avLocation[1]][1] == None or self.board.squares[avLocation[0]][avLocation[1]][1].color == self.OppositeColor():
@@ -237,9 +329,11 @@ class Bishop(Piece):
         self.value = 3
         if color == "White":
             board.player1Score += self.value
+            self.index = len(board.player1Pieces)
             board.player1Pieces.append(self)
         else:
             board.player2Score += self.value
+            self.index = len(board.player2Pieces)
             board.player2Pieces.append(self)
 
         super().__init__(screen, color, location, locationGUI, image, board, SQUARE)
@@ -248,6 +342,50 @@ class Bishop(Piece):
             self.board.UpdateScore(self.value, self.color)
             self.alive = False
             self.board.squares[self.location[0]][self.location[1]][1] = None
+            if self.color == "White":
+                del self.board.player1Pieces[self.index]
+            else:
+                del self.board.player2Pieces[self.index]
+
+    def See(self):
+        seen = [[False for y in range(8)] for x in range(8)] 
+        for i in range(8):
+            if self.location[0] + i < len(self.board.squares) and self.location[1] + i < len(self.board.squares[0]) and i > 0:
+                if self.board.squares[self.location[0] + i][self.location[1] + i][1] != None:
+                    if self.board.squares[self.location[0] + i][self.location[1] + i][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0] + i][self.location[1] + i] = True
+                        break
+                seen[self.location[0] + i][self.location[1] + i] = True
+        for i in range(8):
+            if self.location[0] - i >= 0 and self.location[1] - i >= 0 and i > 0:
+                if self.board.squares[self.location[0] - i][self.location[1] - i][1] != None:
+                    if self.board.squares[self.location[0] - i][self.location[1] - i][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0] - i][self.location[1] - i] = True
+                        break
+                seen[self.location[0] - i][self.location[1] - i] = True
+        for i in range(8):
+            if self.location[0] + i < len(self.board.squares) and self.location[1] - i >= 0 and i > 0:
+                if self.board.squares[self.location[0] + i][self.location[1] - i][1] != None:
+                    if self.board.squares[self.location[0] + i][self.location[1] - i][1].color == self.color: 
+                        break
+                    else:
+                        seen[self.location[0] + i][self.location[1] - i] = True
+                        break
+                seen[self.location[0] + i][self.location[1] - i] = True
+        for i in range(8):
+            if self.location[0] - i >= 0 and self.location[1] + i < len(self.board.squares[0]) and i > 0:
+                if self.board.squares[self.location[0] - i][self.location[1] + i][1] != None:
+                    if self.board.squares[self.location[0] - i][self.location[1] + i][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0] - i][self.location[1] + i] = True
+                        break
+                seen[self.location[0] - i][self.location[1] + i] = True
+        return seen
 
     def isAvailable(self, avLocation):
         for i in range(8):
@@ -286,9 +424,11 @@ class King(Piece):
         self.value = 3
         if color == "White":
             board.player1Score += self.value
+            self.index = len(board.player1Pieces)
             board.player1Pieces.append(self)
         else:
             board.player2Score += self.value
+            self.index = len(board.player2Pieces)
             board.player2Pieces.append(self)
 
         super().__init__(screen, color, location, locationGUI, image, board, SQUARE)
@@ -297,6 +437,86 @@ class King(Piece):
             self.board.UpdateScore(self.value, self.color)
             self.alive = False
             self.board.squares[self.location[0]][self.location[1]][1] = None
+            if self.color == "White":
+                del self.board.player1Pieces[self.index]
+            else:
+                del self.board.player2Pieces[self.index]
+    
+    def See(self):
+        seen = [[False for y in range(8)] for x in range(8)] 
+        for i in range(2):
+            if self.location[1] + i < len(self.board.squares[0]) and i > 0:
+                if self.board.squares[self.location[0]][self.location[1] + i][1] != None:
+                    if self.board.squares[self.location[0]][self.location[1] + i][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0]][self.location[1] + i] = True
+                        break
+                seen[self.location[0]][self.location[1] + i] = True
+        for i in range(2):
+            if self.location[1] - i >= 0 and i > 0:
+                if self.board.squares[self.location[0]][self.location[1] - i][1] != None:
+                    if self.board.squares[self.location[0]][self.location[1] - i][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0]][self.location[1] - i] = True
+                        break
+                seen[self.location[0]][self.location[1] - i] = True
+        for i in range(2):
+            if self.location[0] + i < len(self.board.squares) and i > 0:
+                if self.board.squares[self.location[0] + i][self.location[1]][1] != None:
+                    if self.board.squares[self.location[0] + i][self.location[1]][1].color == self.color: 
+                        break
+                    else:
+                        seen[self.location[0] + i][self.location[1]] = True
+                        break
+                seen[self.location[0] + i][self.location[1]] = True
+        for i in range(2):
+            if self.location[0] - i >= 0 and i > 0:
+                if self.board.squares[self.location[0] - i][self.location[1]][1] != None:
+                    if self.board.squares[self.location[0] - i][self.location[1]][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0] - 1][self.location[1]] = True
+                        break
+                seen[self.location[0] - i][self.location[1]] = True
+        for i in range(2):
+            if self.location[0] + i < len(self.board.squares) and self.location[1] + i < len(self.board.squares[0]) and i > 0:
+                if self.board.squares[self.location[0] + i][self.location[1] + i][1] != None:
+                    if self.board.squares[self.location[0] + i][self.location[1] + i][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0] + i][self.location[1] + i] = True
+                        break
+                seen[self.location[0] + i][self.location[1] + i] = True
+        for i in range(2):
+            if self.location[0] - i >= 0 and self.location[1] - i >= 0 and i > 0:
+                if self.board.squares[self.location[0] - i][self.location[1] - i][1] != None:
+                    if self.board.squares[self.location[0] - i][self.location[1] - i][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0] - i][self.location[1] - i] = True
+                        break
+                seen[self.location[0] - i][self.location[1] - i] = True
+        for i in range(2):
+            if self.location[0] + i < len(self.board.squares) and self.location[1] - i >= 0 and i > 0:
+                if self.board.squares[self.location[0] + i][self.location[1] - i][1] != None:
+                    if self.board.squares[self.location[0] + i][self.location[1] - i][1].color == self.color: 
+                        break
+                    else:
+                        seen[self.location[0] + i][self.location[1] - i] = True
+                        break
+                seen[self.location[0] + i][self.location[1] - i] = True
+        for i in range(2):
+            if self.location[0] - i >= 0 and self.location[1] + i < len(self.board.squares[0]) and i > 0:
+                if self.board.squares[self.location[0] - i][self.location[1] + i][1] != None:
+                    if self.board.squares[self.location[0] - i][self.location[1] + i][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0] - i][self.location[1] + i] = True
+                        break
+                seen[self.location[0] - i][self.location[1] + i] = True
+        return seen
     
     def isAvailable(self, avLocation):
         for i in range(2):
@@ -363,9 +583,11 @@ class Queen(Piece):
         self.value = 9
         if color == "White":
             board.player1Score += self.value
+            self.index = len(board.player1Pieces)
             board.player1Pieces.append(self)
         else:
             board.player2Score += self.value
+            self.index = len(board.player2Pieces)
             board.player2Pieces.append(self)
 
         super().__init__(screen, color, location, locationGUI, image, board, SQUARE)
@@ -374,6 +596,86 @@ class Queen(Piece):
             self.board.UpdateScore(self.value, self.color)
             self.alive = False
             self.board.squares[self.location[0]][self.location[1]][1] = None
+            if self.color == "White":
+                del self.board.player1Pieces[self.index]
+            else:
+                del self.board.player2Pieces[self.index]
+    
+    def See(self):
+        seen = [[False for y in range(8)] for x in range(8)] 
+        for i in range(8):
+            if self.location[1] + i < len(self.board.squares[0]) and i > 0:
+                if self.board.squares[self.location[0]][self.location[1] + i][1] != None:
+                    if self.board.squares[self.location[0]][self.location[1] + i][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0]][self.location[1] + i] = True
+                        break
+                seen[self.location[0]][self.location[1] + i] = True
+        for i in range(8):
+            if self.location[1] - i >= 0 and i > 0:
+                if self.board.squares[self.location[0]][self.location[1] - i][1] != None:
+                    if self.board.squares[self.location[0]][self.location[1] - i][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0]][self.location[1] - i] = True
+                        break
+                seen[self.location[0]][self.location[1] - i] = True
+        for i in range(8):
+            if self.location[0] + i < len(self.board.squares) and i > 0:
+                if self.board.squares[self.location[0] + i][self.location[1]][1] != None:
+                    if self.board.squares[self.location[0] + i][self.location[1]][1].color == self.color: 
+                        break
+                    else:
+                        seen[self.location[0] + i][self.location[1]] = True
+                        break
+                seen[self.location[0] + i][self.location[1]] = True
+        for i in range(8):
+            if self.location[0] - i >= 0 and i > 0:
+                if self.board.squares[self.location[0] - i][self.location[1]][1] != None:
+                    if self.board.squares[self.location[0] - i][self.location[1]][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0] - 1][self.location[1]] = True
+                        break
+                seen[self.location[0] - i][self.location[1]] = True
+        for i in range(8):
+            if self.location[0] + i < len(self.board.squares) and self.location[1] + i < len(self.board.squares[0]) and i > 0:
+                if self.board.squares[self.location[0] + i][self.location[1] + i][1] != None:
+                    if self.board.squares[self.location[0] + i][self.location[1] + i][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0] + i][self.location[1] + i] = True
+                        break
+                seen[self.location[0] + i][self.location[1] + i] = True
+        for i in range(8):
+            if self.location[0] - i >= 0 and self.location[1] - i >= 0 and i > 0:
+                if self.board.squares[self.location[0] - i][self.location[1] - i][1] != None:
+                    if self.board.squares[self.location[0] - i][self.location[1] - i][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0] - i][self.location[1] - i] = True
+                        break
+                seen[self.location[0] - i][self.location[1] - i] = True
+        for i in range(8):
+            if self.location[0] + i < len(self.board.squares) and self.location[1] - i >= 0 and i > 0:
+                if self.board.squares[self.location[0] + i][self.location[1] - i][1] != None:
+                    if self.board.squares[self.location[0] + i][self.location[1] - i][1].color == self.color: 
+                        break
+                    else:
+                        seen[self.location[0] + i][self.location[1] - i] = True
+                        break
+                seen[self.location[0] + i][self.location[1] - i] = True
+        for i in range(8):
+            if self.location[0] - i >= 0 and self.location[1] + i < len(self.board.squares[0]) and i > 0:
+                if self.board.squares[self.location[0] - i][self.location[1] + i][1] != None:
+                    if self.board.squares[self.location[0] - i][self.location[1] + i][1].color == self.color:
+                        break
+                    else:
+                        seen[self.location[0] - i][self.location[1] + i] = True
+                        break
+                seen[self.location[0] - i][self.location[1] + i] = True
+        return seen
     
     def isAvailable(self, avLocation):
         for i in range(8):

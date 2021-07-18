@@ -33,6 +33,15 @@ class Board():
         self.player2Pieces = []
 
     def MovePiece(self, mousePos):
+        self.player1Seen = [[False for y in range(8)] for x in range(8)] 
+        self.player2Seen = [[False for y in range(8)] for x in range(8)] 
+
+        self.player1Seen = self.SquaresSeen(self.player1Pieces, self.player1Seen)
+        self.player2Seen = self.SquaresSeen(self.player2Pieces, self.player2Seen)
+
+        print(self.player1Seen)
+        print(self.player2Seen)
+
         for x in range(8):
             for y in range(8):
                 if self.squaresGUI[x][y].collidepoint(mousePos):
@@ -54,7 +63,15 @@ class Board():
                         self.selectedPiece = self.squares[x][y][1]
                         self.selectedPiece.outlined = True
                         self.selected = True
-                        return False               
+                        return False      
+
+    def SquaresSeen(self, pieces, seen):
+        for i, piece in enumerate(pieces):
+            for x in range(8):
+                for y in range(8):
+                    if not seen[x][y] and piece.See()[x][y]:
+                        seen[x][y] = True
+        return seen
 
     def SelectPiece(self, mousePos, curPlayer):
         if not self.promotion[0]:
