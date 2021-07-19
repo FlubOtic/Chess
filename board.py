@@ -32,6 +32,8 @@ class Board():
         self.player1Pieces = []
         self.player2Pieces = []
 
+        self.castled = False
+
     def MovePiece(self, mousePos):
         self.player1Seen = [[False for y in range(8)] for x in range(8)] 
         self.player2Seen = [[False for y in range(8)] for x in range(8)] 
@@ -39,19 +41,22 @@ class Board():
         self.player1Seen = self.SquaresSeen(self.player1Pieces, self.player1Seen)
         self.player2Seen = self.SquaresSeen(self.player2Pieces, self.player2Seen)
 
-        print(self.player1Seen)
-        print(self.player2Seen)
-
         for x in range(8):
             for y in range(8):
                 if self.squaresGUI[x][y].collidepoint(mousePos):
-                    if (self.squares[x][y][1] == None or self.squares[x][y][1].color is not self.selectedPiece.color) and self.selectedPiece.isAvailable([x, y]):
+                    if (self.squares[x][y][1] == None or self.squares[x][y][1].color is not self.selectedPiece.color or self.selectedPiece.name == "King") and self.selectedPiece.isAvailable([x, y]):
                         self.selectedPiece.Move([x, y])
                         self.selectedPiece.outlined = False
                         self.selectedPiece = None
                         self.selected = False
                         if self.squares[x][y][1].promotion:
                             self.Promotion(self.squares[x][y][1])
+                        return True
+                    elif self.castled:
+                        self.castled = False
+                        self.selectedPiece.outlined = False
+                        self.selectedPiece = None
+                        self.selected = False
                         return True
                     elif (self.squares[x][y][1] == None or self.squares[x][y][1].color is not self.selectedPiece.color) and not self.selectedPiece.isAvailable([x,y]):
                         self.selectedPiece.outlined = False

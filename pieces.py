@@ -422,6 +422,7 @@ class King(Piece):
         self.name = "King"
         image = color + "_" + self.name + ".png"
         self.value = 3
+        self.checkmated = False
         if color == "White":
             board.player1Score += self.value
             self.index = len(board.player1Pieces)
@@ -519,6 +520,54 @@ class King(Piece):
         return seen
     
     def isAvailable(self, avLocation):
+        if self.color == "White":
+            if avLocation == [0, 0] and self.moves == 0 and self.board.squares[0][0][1] != None and self.board.squares[0][0][1].name == "Rook" and self.board.squares[0][0][1].moves == 0:
+                for i in range(3):
+                    if self.board.squares[self.location[0] - 1 - i][self.location[1]][1] != None or self.checkmated:
+                        return False
+                for i in range(2):
+                    if self.board.player2Seen[self.location[0] - 1 - i][self.location[1]]:
+                        return False
+                self.Move([self.location[0] - 2, self.location[1]])
+                self.board.squares[0][0][1].Move([self.location[0] + 1, self.location[1]])
+                self.board.castled = True
+                return False
+            if avLocation == [7, 0] and self.moves == 0 and self.board.squares[7][0][1] != None and self.board.squares[7][0][1].name == "Rook" and self.board.squares[7][0][1].moves == 0:
+                for i in range(2):
+                    if self.board.squares[self.location[0] + 1 + i][self.location[1]][1] != None or self.checkmated:
+                        return False
+                for i in range(2):
+                    if self.board.player2Seen[self.location[0] + 1 + i][self.location[1]]:
+                        return False
+                self.Move([self.location[0] + 2, self.location[1]])
+                self.board.squares[7][0][1].Move([self.location[0] - 1, self.location[1]])
+                self.board.castled = True
+                return False
+        elif self.color == "Black":
+            if avLocation == [0, 7] and self.moves == 0 and self.board.squares[0][7][1] != None and self.board.squares[0][7][1].name == "Rook" and self.board.squares[0][7][1].moves == 0:
+                for i in range(3):
+                    if self.board.squares[self.location[0] - 1 - i][self.location[1]][1] != None or self.checkmated:
+                        return False
+                for i in range(2):
+                    if self.board.player1Seen[self.location[0] - 1 - i][self.location[1]]:
+                        return False
+                self.Move([self.location[0] - 2, self.location[1]])
+                self.board.squares[0][7][1].Move([self.location[0] + 1, self.location[1]])
+                self.board.castled = True
+                return False
+            if avLocation == [7, 7] and self.moves == 0 and self.board.squares[7][7][1] != None and self.board.squares[7][7][1].name == "Rook" and self.board.squares[7][7][1].moves == 0:
+                for i in range(2):
+                    if self.board.squares[self.location[0] + 1 + i][self.location[1]][1] != None or self.checkmated:
+                        return False
+                for i in range(2):
+                    if self.board.player1Seen[self.location[0] + 1 + i][self.location[1]]:
+                        return False
+                self.Move([self.location[0] + 2, self.location[1]])
+                self.board.squares[7][7][1].Move([self.location[0] - 1, self.location[1]])
+                self.board.castled = True
+                return False
+            
+
         for i in range(2):
             if self.location[1] + i < len(self.board.squares[0]) and i > 0:
                 if self.board.squares[self.location[0]][self.location[1] + i][1] != None:
